@@ -1,3 +1,6 @@
 [submodule "3rdparty/gem5"]
 	path = 3rdparty/gem5
 	url = https://github.com/gem5/gem5.git
+[submodule "3rdparty/mor1kx"]
+	path = 3rdparty/mor1kx
+	url = https://github.com/openrisc/mor1kx.git
