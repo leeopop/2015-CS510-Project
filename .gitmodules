@@ -4,3 +4,6 @@
 [submodule "3rdparty/mor1kx"]
 	path = 3rdparty/mor1kx
 	url = https://github.com/openrisc/mor1kx.git
+[submodule "3rdparty/altor32"]
+	path = 3rdparty/altor32
+	url = https://github.com/ultraembedded/altor32.git
