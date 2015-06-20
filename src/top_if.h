@@ -8,6 +8,7 @@
 #define            TOP_RES_OK                0
 #define            TOP_RES_MAX_CYCLES        1
 #define            TOP_RES_BREAKPOINT        2
+#define INCLUDE_ELF_SUPPORT
 
 //--------------------------------------------------------------------
 // Prototypes

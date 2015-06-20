@@ -6,4 +6,4 @@ all: $(ALTOR32_LIB)
 	$(MAKE) -C$(PROJECT_PATH)/src 
 
 clean:
-	rm -rf build/*
+	rm -rf build/altor32 test

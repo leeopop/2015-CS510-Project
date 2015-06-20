@@ -18,7 +18,7 @@ $(VERILATOR_ROOT)/include/verilated_vcd_c.cpp
 
 SOURCES+= main.cpp top.cpp
 OBJS+= $(SOURCES:.cpp=.o)
-LIBS= -laltor32
+LIBS= -laltor32 -lelf
 
 all: test
 
