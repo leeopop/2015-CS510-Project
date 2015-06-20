@@ -147,61 +147,19 @@ int top_setbreakpoint(int bp, unsigned int pc)
 //-----------------------------------------------------------------
 // top_run
 //-----------------------------------------------------------------
+
+#include <E/E_System.hpp>
+#include "module.hpp"
+using namespace E;
+
 int top_run(unsigned int pc, int cycles, int intr_after_cycles)
 {
-    int current_cycle = 0;      
+	System system;
+	VRunner runner(top, &system);
 
-    // Run until fault or number of cycles completed
-    while (!Verilated::gotFinish() && !top->fault_o && (current_cycle < cycles || cycles == -1)) 
-    {
-        // CLK->L
-        top->clk_i = 0;
-        top->eval();
+	system.run(intr_after_cycles);
 
-#if VM_TRACE
-        if (tfp) tfp->dump (main_time++);
-#endif
-
-        // CLK->H
-        top->clk_i = 1;
-        top->eval();            
-
-#if VM_TRACE
-        if (tfp) tfp->dump (main_time++);
-#endif
-
-        // Get current executing instruction PC
-        unsigned int pc = CPU_INSTANCE->u_exec->get_pc_ex();
-        unsigned int opcode = CPU_INSTANCE->u_exec->get_opcode_ex();
-
-#ifdef INST_TRACE
-        // Instruction trace - decode instruction opcode to text
-        if (opcode != OR32_BUBBLE_OPCODE)
-            printf("%08x:   %02x %02x %02x %02x\n", pc, (opcode >> 24) & 0xFF, (opcode >> 16) & 0xFF, (opcode >> 8) & 0xFF, (opcode >> 0) & 0xFF);
-#endif
-
-        // Generate interrupt after a certain number of cycles?
-        if (intr_after_cycles >= 0 && intr_after_cycles == current_cycle)
-        {
-            top->intr_i = 1;
-            intr_after_cycles = -1;
-        }
-        else
-            top->intr_i = 0;
-
-        current_cycle++;
-
-        // Breakpoint hit?
-        if (_stop_pc == pc || top->break_o)
-        {
-            if (_stop_pc == pc)
-                printf("Stopped at breakpoint 0x%x\n", _stop_pc);
-            printf("Cycles = %d\n", current_cycle);
-            return TOP_RES_BREAKPOINT;
-        }
-    }
-
-    printf("Cycles = %d\n", current_cycle);
+    printf("Cycles = %lu\n", system.getCurrentTime());
 
     // Fault
     if (top->fault_o)
@@ -210,7 +168,7 @@ int top_run(unsigned int pc, int cycles, int intr_after_cycles)
         return TOP_RES_FAULT;
     }
     // Number of cycles reached
-    else if (current_cycle >= cycles)
+    else if (system.getCurrentTime() >= cycles)
         return TOP_RES_MAX_CYCLES;
     // No error
     else
