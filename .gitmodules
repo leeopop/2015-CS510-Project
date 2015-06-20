@@ -4,3 +4,6 @@
 [submodule "3rdparty/altor32"]
 	path = 3rdparty/altor32
 	url = ssh://git@github.com/leeopop/altor32.git
+[submodule "3rdparty/KENSv3"]
+	path = 3rdparty/KENSv3
+	url = git@github.com:ANLAB-KAIST/KENSv3.git
