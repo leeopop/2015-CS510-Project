@@ -44,6 +44,9 @@
 #include "altor32__Syms.h"
 #include "verilated.h"
 
+#include <E/E_System.hpp>
+#include "module.hpp"
+
 #if VM_TRACE
 #include <verilated_vcd_c.h>
 #endif
@@ -63,6 +66,8 @@
 //-----------------------------------------------------------------
 static altor32 *top;
 static unsigned int         _stop_pc = 0xFFFFFFFF;
+static E::System* sim_system;
+static VRunner* runner;
 
 #if VM_TRACE
 static unsigned int        main_time = 0;
@@ -75,6 +80,8 @@ static VerilatedVcdC*      tfp;
 int top_init(void)
 {
     top = new altor32();
+    sim_system = new E::System;
+    runner = new VRunner((size_t) MEMORY_START, (size_t)MEMORY_SIZE, top, sim_system);
 
 #if VM_TRACE                  
     // If verilator was invoked with --trace
@@ -113,21 +120,7 @@ int top_load(unsigned int addr, unsigned char val)
 
     addr -= MEMORY_START;    
 
-    switch (addr & 0x3)
-    {
-    case 0:
-        top->v->u_ram->u3->ram[addr >> 2] = val;
-        break;
-    case 1:
-        top->v->u_ram->u2->ram[addr >> 2] = val;
-        break;
-    case 2:
-        top->v->u_ram->u1->ram[addr >> 2] = val;
-        break;
-    case 3:
-        top->v->u_ram->u0->ram[addr >> 2] = val;
-        break;
-    }
+    runner->writeAt(addr, val);
 
     return 0;
 }
@@ -148,18 +141,12 @@ int top_setbreakpoint(int bp, unsigned int pc)
 // top_run
 //-----------------------------------------------------------------
 
-#include <E/E_System.hpp>
-#include "module.hpp"
-using namespace E;
-
 int top_run(unsigned int pc, int cycles, int intr_after_cycles)
 {
-	System system;
-	VRunner runner(top, &system);
 
-	system.run(intr_after_cycles);
+	sim_system->run(intr_after_cycles);
 
-    printf("Cycles = %lu\n", system.getCurrentTime());
+    printf("Cycles = %lu\n", sim_system->getCurrentTime());
 
     // Fault
     if (top->fault_o)
@@ -168,7 +155,7 @@ int top_run(unsigned int pc, int cycles, int intr_after_cycles)
         return TOP_RES_FAULT;
     }
     // Number of cycles reached
-    else if (system.getCurrentTime() >= cycles)
+    else if (sim_system->getCurrentTime() >= cycles)
         return TOP_RES_MAX_CYCLES;
     // No error
     else
@@ -180,6 +167,8 @@ int top_run(unsigned int pc, int cycles, int intr_after_cycles)
 void top_done(void)
 {
     top->final();
+    delete runner;
+    delete sim_system;
 #if VM_TRACE
     if (tfp)
     {
