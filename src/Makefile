@@ -20,9 +20,11 @@ SOURCES+= main.cpp top.cpp
 OBJS+= $(SOURCES:.cpp=.o)
 LIBS= -laltor32 -lelf
 
-all: test
+CXXFLAGS+= -g -O0 
 
-test: $(OBJS)
+all: $(PROJECT_PATH)/build/test
+
+$(PROJECT_PATH)/build/test: $(OBJS)
 	$(CXX) $(CXXFLAGS) $(VERILATOR_FILES) $(OBJS) -Wl,--start-group $(LIBS) -Wl,--end-group -o $(PROJECT_PATH)/build/test 
 	
 %.o : %.cpp

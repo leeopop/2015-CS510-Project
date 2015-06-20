@@ -52,7 +52,7 @@
 // Defines
 //-----------------------------------------------------------------
 #define MEMORY_START        0x10000000
-#define MEMORY_SIZE         (1024 * 1024)
+#define MEMORY_SIZE         (1024 * 1024 * 1024)
 
 #define OR32_BUBBLE_OPCODE  0xFC000000
 
