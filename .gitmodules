@@ -1,6 +1,3 @@
-[submodule "3rdparty/gem5"]
-	path = 3rdparty/gem5
-	url = ssh://git@github.com/leeopop/gem5.git
 [submodule "3rdparty/mor1kx"]
 	path = 3rdparty/mor1kx
 	url = ssh://git@github.com/leeopop/mor1kx.git
