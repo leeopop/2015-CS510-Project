@@ -146,12 +146,12 @@ int top_run(unsigned int pc, int cycles, int intr_after_cycles)
 
 	sim_system->run(intr_after_cycles);
 
-    printf("Cycles = %lu\n", sim_system->getCurrentTime());
+    printf("Cycles = %lu\n", sim_system->getCurrentTime() + 1);
 
     // Fault
     if (top->fault_o)
     {
-        printf("FAULT PC %x!\n", CPU_INSTANCE->u_exec->get_pc_ex());
+        printf("FAULT PC!\n");
         return TOP_RES_FAULT;
     }
     // Number of cycles reached

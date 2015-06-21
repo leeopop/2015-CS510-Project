@@ -9,7 +9,7 @@ TARGET ?= test_program
 
 # Memory Layout
 MEMBASE ?= 0x10000000
-MEMSIZE ?= 16773216#12384
+MEMSIZE ?= 12384
 MEMNAME ?= sram
 
 ###############################################################################

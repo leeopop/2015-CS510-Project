@@ -109,8 +109,8 @@ handle_exception:
     l.add r3, r0, r1
 
     # Jump to debug handler
-    l.movhi r10,hi(gdb_exception);
-    l.ori r10,r10,lo(gdb_exception);   
+    l.movhi r10,hi(exception);
+    l.ori r10,r10,lo(exception);
     l.jalr r10
     l.nop
 

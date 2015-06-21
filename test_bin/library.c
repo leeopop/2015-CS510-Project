@@ -12,3 +12,8 @@ void stop(void)
 {
 	asm volatile ("l.trap 0");
 }
+
+unsigned int * exception(unsigned int *registers, unsigned int reason)
+{
+	return registers;
+}
