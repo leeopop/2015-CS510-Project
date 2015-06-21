@@ -29,14 +29,26 @@ protected:
 	enum MessageType
 	{
 		NEXT_CLOCK,
+		RESPONSE_IMEM,
+		RESPONSE_DMEM,
 	};
 	class Message : public Module::Message
 	{
 	public:
-		enum MessageType type;
+		enum MessageType type = NEXT_CLOCK;
+		uint32_t data = 0;
+		int flag = 0;
 	};
 
+	uint32_t next_idata = 0;
+	int next_iflag = 0;
+	uint32_t next_ddata = 0;
+	int next_dflag = 0;
+
 public:
+	static const E::Time imem_delay;
+	static const E::Time dmem_delay;
+
 	VRunner(size_t memory_start, size_t memory_size, altor32* cpu, E::System* system);
 	void writeAt(size_t addr, uint8_t val);
 	virtual ~VRunner();

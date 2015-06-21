@@ -10,6 +10,9 @@
 
 using namespace E;
 
+const Time VRunner::imem_delay=10;
+const Time VRunner::dmem_delay=100;
+
 VRunner::VRunner(size_t memory_start, size_t memory_size, altor32* cpu, System* system) : Module(system)
 {
 	this->cpu = cpu;
@@ -38,76 +41,28 @@ Module::Message* VRunner::messageReceived(Module* from, Module::Message* message
 
 	switch(runMessage->type)
 	{
+	case RESPONSE_IMEM:
+	{
+		this->next_idata = runMessage->data;
+		this->next_iflag = runMessage->flag;
+		break;
+	}
+	case RESPONSE_DMEM:
+	{
+		this->next_ddata = runMessage->data;
+		this->next_dflag = runMessage->flag;
+		break;
+	}
 	case NEXT_CLOCK:
 	{
 		// CLK->L
 		cpu->clk_i = 0;
 		cpu->eval();
 
-#if 1
-		//if(cpu->imem_cyc == 1)
-		{
-			if(cpu->imem_stb == 1)
-			{
-				size_t addr = cpu->imem_addr - this->memory_start;
-				uint32_t sum = this->memory[addr];
-				sum <<= 8;
-				sum += this->memory[addr+1];
-				sum <<= 8;
-				sum += this->memory[addr+2];
-				sum <<= 8;
-				sum += this->memory[addr+3];
-
-				cpu->imem_data=sum;
-				cpu->imem_ack=1;
-				//cpu->imem_stall=0;
-				printf("Inst addr:%x, Inst content: %x, Sel: %d\n",
-						cpu->imem_addr, cpu->imem_data, cpu->imem_sel);
-			}
-			else
-			{
-				//cpu->imem_stall=0;
-				cpu->imem_ack=0;
-			}
-		}
-
-		//if(cpu->dmem_cyc == 1)
-		{
-			if(cpu->dmem_stb == 1)
-			{
-				if(cpu->dmem_we ==1)
-				{
-					size_t addr = cpu->dmem_address - this->memory_start;
-					uint32_t data = cpu->dmem_data_w;
-					this->memory[addr+0] = (data >> 24) & 0xFF;
-					this->memory[addr+1] = (data >> 16) & 0xFF;
-					this->memory[addr+2] = (data >> 8) & 0xFF;
-					this->memory[addr+3] = (data >> 0) & 0xFF;
-				}
-				else
-				{
-					size_t addr = cpu->dmem_address - this->memory_start;
-					uint32_t sum = this->memory[addr+0];
-					sum <<= 8;
-					sum += this->memory[addr+1];
-					sum <<= 8;
-					sum += this->memory[addr+2];
-					sum <<= 8;
-					sum += this->memory[addr+3];
-					cpu->dmem_data_r = sum;
-				}
-				//cpu->dmem_stall = 0;
-				cpu->dmem_ack=1;
-				printf("Data addr:%x, Is write: %d, Sel: %d\n",
-						cpu->dmem_address, cpu->dmem_we, cpu->dmem_sel);
-			}
-			else
-			{
-				//cpu->dmem_stall = 0;
-				cpu->dmem_ack=0;
-			}
-		}
-#endif
+		cpu->imem_data=next_idata;
+		cpu->imem_ack=next_iflag;
+		cpu->dmem_data_r = next_ddata;
+		cpu->dmem_ack=next_dflag;
 
 		// CLK->H
 		cpu->clk_i = 1;
@@ -131,6 +86,76 @@ Module::Message* VRunner::messageReceived(Module* from, Module::Message* message
 				cpu->imem_cti);
 #endif
 
+		if(cpu->imem_stb == 1)
+		{
+			size_t addr = cpu->imem_addr - this->memory_start;
+			uint32_t sum = this->memory[addr];
+			sum <<= 8;
+			sum += this->memory[addr+1];
+			sum <<= 8;
+			sum += this->memory[addr+2];
+			sum <<= 8;
+			sum += this->memory[addr+3];
+
+			//next_idata=sum;
+			//next_iflag=1;
+			Message* m = new Message;
+			m->type = RESPONSE_IMEM;
+			m->data = sum;
+			m->flag = 1;
+			this->sendMessage(this, m, imem_delay);
+			printf("Inst addr:%x, Inst content: %x, Sel: %d\n",
+					cpu->imem_addr, cpu->imem_data, cpu->imem_sel);
+		}
+		else
+		{
+			next_iflag = 0;
+		}
+
+		if(cpu->dmem_stb == 1)
+		{
+			if(cpu->dmem_we ==1)
+			{
+				size_t addr = cpu->dmem_address - this->memory_start;
+				uint32_t data = cpu->dmem_data_w;
+				this->memory[addr+0] = (data >> 24) & 0xFF;
+				this->memory[addr+1] = (data >> 16) & 0xFF;
+				this->memory[addr+2] = (data >> 8) & 0xFF;
+				this->memory[addr+3] = (data >> 0) & 0xFF;
+				//next_dflag = 1;
+				Message* m = new Message;
+				m->type = RESPONSE_DMEM;
+				m->data = 0;
+				m->flag = 1;
+				this->sendMessage(this, m, dmem_delay);
+			}
+			else
+			{
+				size_t addr = cpu->dmem_address - this->memory_start;
+				uint32_t sum = this->memory[addr+0];
+				sum <<= 8;
+				sum += this->memory[addr+1];
+				sum <<= 8;
+				sum += this->memory[addr+2];
+				sum <<= 8;
+				sum += this->memory[addr+3];
+
+				//next_ddata = sum;
+				//next_dflag = 1;
+				Message* m = new Message;
+				m->type = RESPONSE_DMEM;
+				m->data = sum;
+				m->flag = 1;
+				this->sendMessage(this, m, dmem_delay);
+			}
+
+			printf("Data addr:%x, Is write: %d, Sel: %d\n",
+					cpu->dmem_address, cpu->dmem_we, cpu->dmem_sel);
+		}
+		else
+		{
+			next_dflag = 0;
+		}
 
 		if(Verilated::gotFinish() || cpu->fault_o || cpu->break_o)
 			break;

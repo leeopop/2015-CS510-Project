@@ -146,7 +146,7 @@ int top_run(unsigned int pc, int cycles, int intr_after_cycles)
 
 	sim_system->run(intr_after_cycles);
 
-    printf("Cycles = %lu\n", sim_system->getCurrentTime() + 1);
+    printf("Cycles = %lu\n", sim_system->getCurrentTime());
 
     // Fault
     if (top->fault_o)
